@@ -1,0 +1,78 @@
+{
+  "basic": {
+    "original": {
+      "text": "This is the main message content that will be forwarded from a channel.",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 123
+    },
+    "attached": {
+      "text": "This is additional context added as a reply to the forwarded message."
+    },
+    "expected": {
+      "combined": "This is the main message content that will be forwarded from a channel.\n\nThis is additional context added as a reply to the forwarded message.",
+      "source_reference": "https://t.me/example_channel/123"
+    }
+  },
+  "length_test": {
+    "original": {
+      "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 124
+    },
+    "attached": {
+      "text": "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem."
+    },
+    "expected": {
+      "truncated": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...",
+      "smart_truncated": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.",
+      "parts": [
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+      ]
+    }
+  },
+  "special_chars": {
+    "original": {
+      "text": "🌟 Special message with emojis 🚀 and Unicode characters: ñ, é, ß",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 125
+    },
+    "attached": {
+      "text": "More special characters: ∑ξ⊗∅ and emojis 🎉🎊"
+    },
+    "expected": {
+      "combined": "🌟 Special message with emojis 🚀 and Unicode characters: ñ, é, ß\n\nMore special characters: ∑ξ⊗∅ and emojis 🎉🎊"
+    }
+  },
+  "formatted": {
+    "original": {
+      "text": "*Bold text* with _italic_ and `code` formatting",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 126
+    },
+    "attached": {
+      "text": "Reply with [link](https://example.com) and #hashtags"
+    },
+    "expected": {
+      "combined": "*Bold text* with _italic_ and `code` formatting\n\nReply with [link](https://example.com) and #hashtags",
+      "plain": "Bold text with italic and code formatting\n\nReply with link and #hashtags"
+    }
+  }
+}

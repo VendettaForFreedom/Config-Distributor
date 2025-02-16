@@ -1,8 +1,6 @@
-#!/usr/local/bin/python3
-# coding: utf-8
+"""
+TeleTweet - A Telegram bot for forwarding messages to multiple platforms.
+"""
 
-# TeleTweet - __init__.py.py
-# 10/22/20 16:18
-#
-
+__version__ = "1.0.0"
 __author__ = "Benny <benny.think@gmail.com>"

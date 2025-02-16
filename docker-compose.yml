@@ -1,20 +1,28 @@
-version: '3.1'
+version: '3.8'
 
 services:
-  bot:
-    image: ${DOCKER_IMAGE_DEPLOYED}
-    restart: on-failure
+  teletweet:
+    build: .
+    container_name: teletweet
+    restart: unless-stopped
     volumes:
-      - ./env/auth.json:/TeleTweet/teletweet/auth.json
-    env_file:
-      - env/teletweet.env
+      - ./teletweet:/app/teletweet
+      - ./.env:/app/.env
+      - ./data:/app/data
+    environment:
+      - PYTHONPATH=/app
+      - TZ=UTC
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('https://api.telegram.org/bot${BOT_TOKEN}/getMe')"]
+      interval: 300s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # web:
-  #   image: bennythink/teletweet
-  #   restart: always
-  #   env_file:
-  #     - env/teletweet.env
-  #   working_dir: /TeleTweet/twauth-web
-  #   command: python twauth.py -h=0.0.0.0
-  #   ports:
-  #     - "8888:8888"
+volumes:
+  data:
+    driver: local

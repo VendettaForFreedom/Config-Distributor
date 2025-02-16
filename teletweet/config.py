@@ -8,9 +8,12 @@
 __author__ = "Benny <benny.think@gmail.com>"
 
 import os
+from dotenv import load_dotenv
 
-BOT_TOKEN = os.getenv("TOKEN", "")
-APP_ID = int(os.getenv("APP_ID", ""))
+load_dotenv()
+
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+APP_ID = int(os.getenv("APP_ID", "0")) if os.getenv("APP_ID") else 0
 APP_HASH = os.getenv("APP_HASH", "")
 
 CONSUMER_KEY = os.getenv("CONSUMER_KEY", "")
@@ -27,6 +30,22 @@ CHANNEL_AD_MESSAGE_ID = int(os.getenv("CHANNEL_AD_MESSAGE_ID", "0"))
 GROUP = os.getenv("GROUP", "")
 # AUTH_STRING = os.getenv("AUTH_STRING", "")
 
+# Channel and URL formats
+CHANNEL_URL = os.getenv("CHANNEL_URL", "")
+CHANNEL = os.getenv("GROUP", "")
+CONFIG_CHANNEL = os.getenv("CONFIG_CHANNEL", "")
+SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL", "")
+DISCUSSION_GROUP = os.getenv("DISCUSSION_GROUP", "")
+DISCUSSION_GROUP_URL = os.getenv("DISCUSSION_GROUP_URL", "")
+TWITTER = "Twitter: " + os.getenv("TWITTER_URL", "")
+CONTINUE_READING = "Continue reading at:"
+
+tweet_length = int(os.getenv("tweet_length", "300"))
+tweet_format = "https://twitter.com/{screen_name}/status/{id}"
+# remove ALLOW_USERS white spaces then split by comma
+ALLOW_USERS = os.getenv("ALLOW_USERS", "").replace(" ", "").split(",") if os.getenv("ALLOW_USERS", "") else [""]
+
+
 DISCUSSION_GROUP = "\n\n@FreeVPNHomesDiscussion\n\n"
 DISCUSSION_GROUP_URL = """\n\nhttps://t.me/FreeVPNHomesDiscussion\n\n"""
 TWITTER = "توییتر:\n\nhttps://twitter.com/FreeVPNHomes"
@@ -37,8 +56,3 @@ CHANNEL = """\n\n@FreeVPNHomes\n\n"""
 CONFIG_CHANNEL = "\nhttps://t.me/FreeVPNHomesConfigs/"
 SOURCE_CHANNEL = "\nhttps://t.me/javeednaman/"
 CONTINUE_READING = "ادامه مطلب رو در کانال زیر بخوانید:\n"
-
-tweet_length = int(os.getenv("tweet_length", "300"))
-tweet_format = "https://twitter.com/{screen_name}/status/{id}"
-# remove ALLOW_USERS white spaces then split by comma
-ALLOW_USERS = os.getenv("ALLOW_USERS", "").replace(" ", "").split(",") if os.getenv("ALLOW_USERS", "") else [""]

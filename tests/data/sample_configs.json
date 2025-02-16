@@ -1,0 +1,93 @@
+{
+  "single_config": {
+    "original": {
+      "text": "ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@example.com:8388#Server1",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 132
+    },
+    "attached": {
+      "text": "🌍 Location: US\n⚡ Speed: 100Mbps\n🔒 Encryption: AES-256-GCM"
+    },
+    "expected": {
+      "combined": "ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@example.com:8388#Server1\n\n🌍 Location: US\n⚡ Speed: 100Mbps\n🔒 Encryption: AES-256-GCM",
+      "source_reference": "https://t.me/example_channel/132"
+    }
+  },
+  "multiple_configs": {
+    "original": {
+      "text": "ss://config1@server1.com:8388#US1\nss://config2@server2.com:8388#JP1\nss://config3@server3.com:8388#UK1",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 133
+    },
+    "attached": {
+      "text": "🌟 Premium Servers\n💫 High Speed\n🔐 Maximum Security"
+    },
+    "expected": {
+      "parts": [
+        {
+          "config": "ss://config1@server1.com:8388#US1",
+          "combined": "ss://config1@server1.com:8388#US1\n\n🌟 Premium Servers\n💫 High Speed\n🔐 Maximum Security"
+        },
+        {
+          "config": "ss://config2@server2.com:8388#JP1",
+          "combined": "ss://config2@server2.com:8388#JP1\n\n🌟 Premium Servers\n💫 High Speed\n🔐 Maximum Security"
+        },
+        {
+          "config": "ss://config3@server3.com:8388#UK1",
+          "combined": "ss://config3@server3.com:8388#UK1\n\n🌟 Premium Servers\n💫 High Speed\n🔐 Maximum Security"
+        }
+      ],
+      "source_reference": "https://t.me/example_channel/133"
+    }
+  },
+  "config_with_media": {
+    "original": {
+      "photo": {
+        "file_id": "SAMPLE_FILE_ID_5",
+        "width": 1280,
+        "height": 720,
+        "file_size": 128000
+      },
+      "caption": "ss://configWithPhoto@server.com:8388#Photo1",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 134
+    },
+    "attached": {
+      "text": "📍 Server Location: Singapore\n🚀 Optimized for Streaming"
+    },
+    "expected": {
+      "combined_caption": "ss://configWithPhoto@server.com:8388#Photo1\n\n📍 Server Location: Singapore\n🚀 Optimized for Streaming",
+      "source_reference": "https://t.me/example_channel/134"
+    }
+  },
+  "formatted_config": {
+    "original": {
+      "text": "*Premium Config*\n`ss://formatted@config.com:8388#Premium1`\n_Special server_",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 135
+    },
+    "attached": {
+      "text": "✨ Features:\n- High speed\n- Low latency\n- 24/7 uptime"
+    },
+    "expected": {
+      "combined": "*Premium Config*\n`ss://formatted@config.com:8388#Premium1`\n_Special server_\n\n✨ Features:\n- High speed\n- Low latency\n- 24/7 uptime",
+      "plain": "Premium Config\nss://formatted@config.com:8388#Premium1\nSpecial server\n\n✨ Features:\n- High speed\n- Low latency\n- 24/7 uptime"
+    }
+  }
+}

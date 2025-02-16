@@ -1,57 +1,203 @@
-# Config-Distributor Project
+# TeleTweet Bot
 
-## Introduction
-Config-Distributor seamlessly connects Telegram with Twitter, empowering admins to distribute vpn configs to different telegram channels and group as well twitter. This integration is facilitated by a sophisticated Telegram bot, built on Python, which handles Twitter operations securely and efficiently.
+A Telegram bot that handles message forwarding to multiple platforms with advanced message management features.
 
 ## Features
-- **Direct Twitter Integration**: Link your Twitter account with Telegram for direct tweeting, retweeting, and more.
-- **Media Tweeting**: Supports tweeting text, images, videos, and GIFs directly from Telegram.
-- **Secure Authentication**: Ensures a secure sign-in process to connect your Twitter account with the Telegram bot.
-- **Interactive Bot Commands**: Use simple bot commands to control your Twitter account functionalities.
 
-## Installation
-1. Clone the project repository to your local machine.
-2. Install Python 3.x, if not already installed.
-3. Install necessary Python dependencies by executing `pip install -r requirements.txt`.
+### 1. Message Handling
 
-## Configuration (`config.py`)
-Before launching the Teletweet bot, you must accurately configure it with your API keys and settings in `config.py`. This configuration involves setting up both Telegram and Twitter API credentials, along with additional settings specific to the bot's operation:
+#### Forwarded Messages
 
-- **Telegram Configuration**:
-  - `APP_ID` and `APP_HASH`: These are your Telegram application ID and hash, obtainable after creating a new application at [my.telegram.org](https://my.telegram.org).
-  - `BOT_TOKEN`: The token for your Telegram bot, provided by BotFather when you create a new bot on Telegram.
+- Automatically detects messages forwarded from channels
+- Preserves original source channel information
+- Maintains correct message references
+- Supports media (photos, documents, videos, stickers)
 
-- **Twitter Configuration**:
-  - `ACCESS_KEY` and `ACCESS_SECRET`: Your Twitter API key and secret key, obtained when you create a new application on the Twitter Developer portal.
-  - Additional Twitter-specific configurations may include tokens for user authentication: `CONSUMER_KEY` and `CONSUMER_SECRET`, which are typically obtained through the OAuth process when a user authenticates their account with your application.
+#### Direct Messages
 
-- **Bot Settings**:
-  - `CHANNEL_ID` and `CONFIG_CHANNEL_ID`: Telegram channel IDs used for specific functionalities by the bot, if required.
-  - `ALLOW_USERS`: A list of Telegram user IDs permitted to use this bot. Leave as `[""]` to allow open access.
-  - `FEEDBACK`: Optionally, set a Telegram username or channel ID to receive feedback.
-  - Configuration constants like `TODAY_CONFIG`, `SIGN`, `LAST_MESSAGE`, and `tweet_format` define operational details for the bot.
+- Single config messages
+- Multiple config messages (line-separated)
+- Media messages with captions
+- Media groups (multiple photos)
 
-Ensure that you replace placeholder values in `config.py` with your actual API keys and settings. Proper configuration is crucial for the bot's operation, as it needs to authenticate and interact with both Telegram and Twitter APIs successfully.
+### 2. Publishing Options
 
-Bot Commands
-The bot recognizes commands for user interaction, allowing management of Twitter activities via Telegram. Here's a reminder of the commands and their functionalities:
+#### Platforms
 
-`/start`: Greets the user and provides initial instructions or the authentication link for Twitter.
+- Telegram Channel
+- Telegram Group
+- Twitter
+- All Platforms simultaneously
 
-`/sign_in`: Initiates Twitter authentication, guiding the user through obtaining and submitting an authentication code.
+#### Message Formats
 
-`/sign_off`: Logs the user out, disconnecting their Twitter account from the bot.
+- Text only
+- Photo with caption
+- Multiple photos with caption
+- Documents/Videos with caption
 
-Direct Messaging: Users can send tweets (text or media) directly by messaging the bot.
+### 3. Length Management
 
-## Usage
-After configuring `config.py` with your API keys and other settings, run `tweetbot.py` to start the Telegram bot. Follow the bot's instructions for signing in to Twitter and using the available commands to tweet.
+When messages exceed platform limits (Twitter: 280 chars, Telegram: 4000 chars), the bot offers three options:
+
+1. **Auto Truncate**: Simple truncation with "..."
+2. **Smart Truncate**: Intelligent truncation at:
+   - Sentence boundaries (., !, ?)
+   - Paragraph breaks
+   - Word boundaries
+3. **Split Message**: Divides content into multiple messages while preserving:
+   - Media attachments
+   - Source references
+   - Formatting
+
+### 4. Source Attribution
+
+- Preserves original channel references
+- Format: https://t.me/username/message_id
+- Handles both public and private channel forwards
+- Maintains proper attribution in splits/truncations
+
+### 5. Tag Management
+
+- Random tag selection
+- First 5 random tags option
+- All tags option
+- Tag file management (add/remove)
+- Per-platform tag formatting
+
+### 6. User Management
+
+- Whitelist-based access control
+- Channel/Group member verification
+- Admin privileges
+- User action logging
+- Permission-based command access
+
+## Commands
+
+- `/start` - Start the bot and get introduction
+- `/help` - Show available commands and features
+- `/delete` - Delete a tweet (reply to message)
+
+## Interactive Flow
+
+1. **Message Reception**
+
+   - Forward a message from channel
+   - Send direct config(s)
+   - Send media content
+
+2. **Publishing Type Selection** (for configs)
+
+   - Single Message
+   - Multiple Messages (for multi-line content)
+
+3. **Platform Selection**
+
+   - Channel
+   - Group
+   - Twitter
+   - All Platforms
+
+4. **Length Management** (if needed)
+   - Auto Truncate
+   - Smart Truncate
+   - Split Message
+
+## Message Store
+
+The bot implements a thread-safe message store for:
+
+- Temporary message caching
+- Media group handling
+- Callback data storage
+- Auto-cleanup after 1 hour
+
+## Error Handling
+
+- Platform-specific error handling
+- Failed message retry options
+- Error logging and reporting
+- User-friendly error messages
+
+## Technical Details
+
+### Project Structure
+
+```
+teletweet/
+├── __init__.py           # Package initialization
+├── tweetbot.py           # Main bot class
+├── config.py             # Configuration settings
+├── handlers/             # Message handlers
+│   ├── __init__.py
+│   ├── commands.py       # Command handlers
+│   ├── messages.py       # Message handlers
+│   └── callbacks.py      # Callback handlers
+└── utils/               # Utility modules
+    ├── __init__.py
+    ├── auth.py          # Authentication
+    ├── message_utils.py # Message processing
+    ├── message_store.py # Data storage
+    ├── publishing.py    # Platform publishing
+    └── tags.py         # Tag management
+```
+
+### Dependencies
+
+- pyrogram: Telegram client library
+- tweepy: Twitter API client
+- python-dotenv: Environment configuration
+
+### Configuration
+
+Required environment variables:
+
+```
+APP_ID=your_telegram_app_id
+APP_HASH=your_telegram_app_hash
+BOT_TOKEN=your_telegram_bot_token
+CHANNEL_ID=your_channel_id
+GROUP_ID=your_group_id
+SOURCE_CHANNEL_ID=source_channel_id
+ALLOW_USERS=comma_separated_user_ids
+```
+
+## Usage Examples
+
+1. Forward a channel post:
+
+   ```
+   1. Forward any message from a channel to the bot
+   2. Select target platform(s)
+   3. Bot handles length and publishing automatically
+   ```
+
+2. Send configs:
+
+   ```
+   1. Send single or multiple configs
+   2. Choose publishing mode (single/multiple)
+   3. Select target platform(s)
+   4. Handle any length issues if prompted
+   ```
+
+3. Send media:
+   ```
+   1. Send photo/video/document
+   2. Add caption if needed
+   3. Select target platform(s)
+   4. Bot handles media upload and caption formatting
+   ```
 
 ## Contributing
-We encourage contributions to the Teletweet project. If you've identified a bug, have suggestions for improvements, or want to add new features, please fork the repository, make your changes, and submit a pull request.
 
-- We have deployment on feature-* branches that has an open pull request with build tag
-- Production deployment when there is a new commit on deployment branch
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create Pull Request
 
 ## License
-GPL 2.0__
+
+This project is licensed under the MIT License - see the LICENSE file for details.

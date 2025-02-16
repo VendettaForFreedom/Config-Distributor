@@ -11,11 +11,11 @@ import logging
 import re
 import traceback
 from typing import Union
-from helper import generate_tags
+from ..helper import generate_tags
 
 import tweepy
 
-from config import (
+from ..config import (
     CONSUMER_KEY, 
     CONSUMER_SECRET,
     ACCESS_KEY, 
@@ -32,21 +32,39 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(filename)s [%(le
 
 def __connect_twitter(chat_id: int):
     logging.info("Connecting to twitter api...")
-    client = tweepy.Client(
-        consumer_key=CONSUMER_KEY,
-        consumer_secret=CONSUMER_SECRET,
-        access_token=ACCESS_KEY,
-        access_token_secret=ACCESS_SECRET,
-    )
-    api = tweepy.API(
-        tweepy.OAuth1UserHandler(
+    
+    # Verify credentials are present
+    if not all([CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET]):
+        logging.error("Missing Twitter credentials")
+        raise ValueError("Twitter credentials are not properly configured")
+        
+    try:
+        client = tweepy.Client(
             consumer_key=CONSUMER_KEY,
             consumer_secret=CONSUMER_SECRET,
             access_token=ACCESS_KEY,
             access_token_secret=ACCESS_SECRET,
         )
-    )
-    return client, api
+        api = tweepy.API(
+            tweepy.OAuth1UserHandler(
+                consumer_key=CONSUMER_KEY,
+                consumer_secret=CONSUMER_SECRET,
+                access_token=ACCESS_KEY,
+                access_token_secret=ACCESS_SECRET,
+            )
+        )
+        
+        # Verify credentials are valid
+        me = client.get_me()
+        if not me:
+            raise ValueError("Failed to verify Twitter credentials")
+            
+        logging.info(f"Connected to Twitter as @{me.data['username']}")
+        return client, api
+        
+    except Exception as e:
+        logging.error(f"Failed to connect to Twitter: {str(e)}")
+        raise ValueError(f"Twitter authentication failed: {str(e)}")
 
 
 def upload_media(api, pic) -> Union[list, None]:
@@ -59,47 +77,68 @@ def upload_media(api, pic) -> Union[list, None]:
         ids.append(mid)
     return [i.media_id for i in ids]
 
-def send_tweet(message, text = None, pics: Union[list, None] = None) -> dict:
+async def send_tweet(message, text = None, pics: Union[list, None] = None) -> dict:
     logging.info("Preparing tweet for...")
     chat_id = message.chat.id
     if not text:
         text = message.text or message.caption
         text = text.replace(CHANNEL, CHANNEL_URL).replace(DISCUSSION_GROUP, DISCUSSION_GROUP_URL).replace(TWITTER, "")
 
-    tweet_id = __get_tweet_id_from_reply(message)
-    client, api = __connect_twitter(chat_id)
-    logging.info("Tweeting...")
-    ids = upload_media(api, pics)
     try:
-        status = client.create_tweet(text=text, media_ids=ids, in_reply_to_tweet_id=tweet_id)
-        logging.info("Tweeted")
-        response = status.data
+        tweet_id = __get_tweet_id_from_reply(message)
+        client, api = __connect_twitter(chat_id)
+        
+        if not CONSUMER_KEY or not CONSUMER_SECRET or not ACCESS_KEY or not ACCESS_SECRET:
+            return {"error": "Twitter credentials are not configured properly"}
+            
+        logging.info("Tweeting...")
+        ids = upload_media(api, pics)
+        
+        try:
+            status = client.create_tweet(text=text, media_ids=ids, in_reply_to_tweet_id=tweet_id)
+            logging.info(f"Successfully tweeted: {status.data}")
+            return {"success": True, "data": status.data}
+        except Exception as e:
+            if "Your Tweet text is too long." in str(e):
+                logging.warning("Tweet too long, trying to make it shorter...")
+                try:
+                    status = client.create_tweet(text=text[:270] + "...", media_ids=ids, in_reply_to_tweet_id=tweet_id)
+                    logging.info(f"Successfully tweeted with truncation: {status.data}")
+                    return {"success": True, "data": status.data}
+                except Exception as e2:
+                    logging.error(f"Failed to tweet even after truncation: {e2}")
+                    return {"error": f"Failed to tweet even after truncation: {str(e2)}"}
+            else:
+                error_msg = f"Failed to tweet: {str(e)}"
+                logging.error(f"{error_msg}\n{traceback.format_exc()}")
+                return {"error": error_msg}
+                
     except Exception as e:
-        if "Your Tweet text is too long." in str(e):
-            logging.warning("Tweet too long, trying to make it shorter...")
-            # try to post by making it shorter
-            status = client.create_tweet(text=text[:270] + "...", media_ids=ids, in_reply_to_tweet_id=tweet_id)
-            response = status.data
-        else:
-            logging.error(traceback.format_exc())
-            response = {"error": str(e)}
-
-    return response
+        error_msg = f"Error in tweet preparation: {str(e)}"
+        logging.error(f"{error_msg}\n{traceback.format_exc()}")
+        return {"error": error_msg}
 
 
-def get_me(chat_id) -> str:
+async def get_me(chat_id) -> str:
     logging.info("Get me!")
     try:
         client, api = __connect_twitter(chat_id)
-        me = client.get_me().data
-        name = me["name"]
-        user_id = me["username"]
-        response = f"[{name}](https://twitter.com/{user_id})"
+        try:
+            me = client.get_me()
+            if not me or not me.data:
+                return {"error": "Failed to get Twitter account info"}
+            name = me.data["name"]
+            username = me.data["username"]
+            logging.info(f"Successfully retrieved Twitter info: @{username}")
+            return f"[{name}](https://twitter.com/{username})"
+        except Exception as e:
+            error_msg = f"Error getting Twitter account info: {str(e)}"
+            logging.error(f"{error_msg}\n{traceback.format_exc()}")
+            return {"error": error_msg}
     except Exception as e:
-        logging.error(traceback.format_exc())
-        response = {"error": str(e)}
-
-    return response
+        error_msg = f"Twitter connection error: {str(e)}"
+        logging.error(f"{error_msg}\n{traceback.format_exc()}")
+        return {"error": error_msg}
 
 
 def delete_tweet(message) -> dict:

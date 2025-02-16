@@ -1,0 +1,143 @@
+{
+  "photo_with_caption": {
+    "original": {
+      "photo": {
+        "file_id": "SAMPLE_FILE_ID_1",
+        "width": 1280,
+        "height": 720,
+        "file_size": 128000
+      },
+      "caption": "Photo caption from the original message",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 127
+    },
+    "attached": {
+      "text": "Additional description for the photo"
+    },
+    "expected": {
+      "combined_caption": "Photo caption from the original message\n\nAdditional description for the photo",
+      "source_reference": "https://t.me/example_channel/127"
+    }
+  },
+  "multiple_photos": {
+    "original": {
+      "media_group_id": "12345678",
+      "media_group": [
+        {
+          "file_id": "SAMPLE_FILE_ID_2",
+          "width": 1280,
+          "height": 720,
+          "file_size": 128000,
+          "caption": "First photo in album"
+        },
+        {
+          "file_id": "SAMPLE_FILE_ID_3",
+          "width": 1280,
+          "height": 720,
+          "file_size": 128000
+        },
+        {
+          "file_id": "SAMPLE_FILE_ID_4",
+          "width": 1280,
+          "height": 720,
+          "file_size": 128000
+        }
+      ],
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 128
+    },
+    "attached": {
+      "text": "Description for the photo album"
+    },
+    "expected": {
+      "combined_caption": "First photo in album\n\nDescription for the photo album",
+      "source_reference": "https://t.me/example_channel/128"
+    }
+  },
+  "document_with_caption": {
+    "original": {
+      "document": {
+        "file_id": "SAMPLE_DOC_ID_1",
+        "file_name": "document.pdf",
+        "mime_type": "application/pdf",
+        "file_size": 256000
+      },
+      "caption": "Document caption from original message",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 129
+    },
+    "attached": {
+      "text": "Additional context for the document"
+    },
+    "expected": {
+      "combined_caption": "Document caption from original message\n\nAdditional context for the document",
+      "source_reference": "https://t.me/example_channel/129"
+    }
+  },
+  "video_with_caption": {
+    "original": {
+      "video": {
+        "file_id": "SAMPLE_VIDEO_ID_1",
+        "width": 1920,
+        "height": 1080,
+        "duration": 30,
+        "file_size": 5120000,
+        "thumb": {
+          "file_id": "SAMPLE_THUMB_ID_1",
+          "width": 320,
+          "height": 180
+        }
+      },
+      "caption": "Video caption from original message",
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 130
+    },
+    "attached": {
+      "text": "Additional context for the video"
+    },
+    "expected": {
+      "combined_caption": "Video caption from original message\n\nAdditional context for the video",
+      "source_reference": "https://t.me/example_channel/130"
+    }
+  },
+  "sticker": {
+    "original": {
+      "sticker": {
+        "file_id": "SAMPLE_STICKER_ID_1",
+        "width": 512,
+        "height": 512,
+        "is_animated": false,
+        "emoji": "🎉"
+      },
+      "from_chat": {
+        "id": "-1001234567890",
+        "username": "example_channel",
+        "title": "Example Channel"
+      },
+      "message_id": 131
+    },
+    "attached": {
+      "text": "Context for the sticker"
+    },
+    "expected": {
+      "combined_caption": "Context for the sticker",
+      "source_reference": "https://t.me/example_channel/131"
+    }
+  }
+}
