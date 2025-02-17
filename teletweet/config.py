@@ -30,29 +30,21 @@ CHANNEL_AD_MESSAGE_ID = int(os.getenv("CHANNEL_AD_MESSAGE_ID", "0"))
 GROUP = os.getenv("GROUP", "")
 # AUTH_STRING = os.getenv("AUTH_STRING", "")
 
-# Channel and URL formats
-CHANNEL_URL = os.getenv("CHANNEL_URL", "")
-CHANNEL = os.getenv("GROUP", "")
-CONFIG_CHANNEL = os.getenv("CONFIG_CHANNEL", "")
-SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL", "")
-DISCUSSION_GROUP = os.getenv("DISCUSSION_GROUP", "")
-DISCUSSION_GROUP_URL = os.getenv("DISCUSSION_GROUP_URL", "")
-TWITTER = "Twitter: " + os.getenv("TWITTER_URL", "")
-CONTINUE_READING = "Continue reading at:"
-
-tweet_length = int(os.getenv("tweet_length", "300"))
-tweet_format = "https://twitter.com/{screen_name}/status/{id}"
-# remove ALLOW_USERS white spaces then split by comma
-ALLOW_USERS = os.getenv("ALLOW_USERS", "").replace(" ", "").split(",") if os.getenv("ALLOW_USERS", "") else [""]
-
-
+# Message formatting templates - Hard-coded values that should not be overridden by env vars
 DISCUSSION_GROUP = "\n\n@FreeVPNHomesDiscussion\n\n"
 DISCUSSION_GROUP_URL = """\n\nhttps://t.me/FreeVPNHomesDiscussion\n\n"""
-TWITTER = "توییتر:\n\nhttps://twitter.com/FreeVPNHomes"
-FEEDBACK = "\n\nنظرات و پیشنهادات خودتون رو برامون تو گروه بنویسین:{0}".replace("{0}",DISCUSSION_GROUP) + TWITTER
-TODAY_CONFIG = "کانفیگ های امروز:"
+TWITTER = "توییتر:\n\nhttps://twitter.com/FreeVPNHomes" # Twitter link in Persian
+FEEDBACK = "\n\nنظرات و پیشنهادات خودتون رو برامون تو گروه بنویسین:{0}".replace("{0}",DISCUSSION_GROUP) + TWITTER # Feedback text in Persian
+TODAY_CONFIG = "کانفیگ های امروز:" # Today's configs text in Persian
 CHANNEL_URL = """\n\nhttps://t.me/FreeVPNHomes\n\n"""
 CHANNEL = """\n\n@FreeVPNHomes\n\n"""
 CONFIG_CHANNEL = "\nhttps://t.me/FreeVPNHomesConfigs/"
 SOURCE_CHANNEL = "\nhttps://t.me/javeednaman/"
-CONTINUE_READING = "ادامه مطلب رو در کانال زیر بخوانید:\n"
+CONTINUE_READING = "ادامه مطلب رو در کانال زیر بخوانید:\n" # Continue reading text in Persian
+
+# Tweet settings
+tweet_length = int(os.getenv("tweet_length", "300"))
+tweet_format = "https://twitter.com/{screen_name}/status/{id}"
+
+# User permissions
+ALLOW_USERS = os.getenv("ALLOW_USERS", "").replace(" ", "").split(",") if os.getenv("ALLOW_USERS", "") else [""]

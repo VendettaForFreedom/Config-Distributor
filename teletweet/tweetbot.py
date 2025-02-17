@@ -15,7 +15,13 @@ sys.path.append(str(current_dir))
 
 from pyrogram import Client, filters
 from teletweet.config import APP_HASH, APP_ID, BOT_TOKEN
-from teletweet.handlers.commands import start_handler, help_handler, delete_handler, status_handler
+from teletweet.utils.auth import user_check
+from teletweet.handlers.commands import (
+    start_handler, 
+    help_handler, 
+    delete_handler, 
+    status_handler
+)
 from teletweet.handlers.messages import (
     message_handler, 
     media_group_handler,

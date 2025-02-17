@@ -10,7 +10,8 @@ from ..utils.publishing import (
     get_enabled_platforms
 )
 from ..utils.constants import tweet_length
-from ..utils.platform_options import ask_platform_options, show_preview
+from ..utils.platform_options import ask_platform_options
+from ..utils.preview import show_preview
 from ..utils.message_utils import check_message_length, split_message
 from .messages import get_attached_message
 

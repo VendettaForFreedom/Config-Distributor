@@ -135,3 +135,5 @@ setup.sh
 /teletweet/auth.json
 /teletweet/teletweet.session
 /teletweet/teletweet.session-journal
+teletweet_bot.session-journal
+teletweet_bot.session

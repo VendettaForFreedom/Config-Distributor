@@ -1,31 +1,37 @@
-"""
-Message handlers for the TeleTweet bot.
+from .messages import (
+    message_handler,
+    media_group_handler,
+    single_media_handler,
+    get_attached_message
+)
 
-This package contains handler modules for different types of messages:
-- commands.py: Handles bot commands (/start, /help, /delete)
-- messages.py: Handles incoming messages (text, media, forwards)
-- callbacks.py: Handles callback queries from inline buttons
+from .callbacks import (
+    config_callback,
+    platform_callback,
+    truncation_callback,
+    preview_callback,
+    back_to_options_callback
+)
 
-The handlers implement the bot's core functionality:
-- Command processing
-- Message forwarding
-- Platform selection
-- Message length management
-- Media handling
-"""
-
-from .commands import start_handler, help_handler, delete_handler
-from .messages import message_handler, media_group_handler, single_media_handler
-from .callbacks import config_callback, platform_callback, truncation_callback
+from .commands import (
+    start_handler,
+    help_handler,
+    delete_handler,
+    status_handler
+)
 
 __all__ = [
-    'start_handler',
-    'help_handler',
-    'delete_handler',
     'message_handler',
     'media_group_handler',
     'single_media_handler',
+    'get_attached_message',
     'config_callback',
     'platform_callback',
-    'truncation_callback'
+    'truncation_callback',
+    'preview_callback',
+    'back_to_options_callback',
+    'start_handler',
+    'help_handler',
+    'delete_handler',
+    'status_handler'
 ]

@@ -17,10 +17,13 @@ def generate_tags(mode: Optional[str] = None) -> str:
         return ""
         
     if mode == "first5random":
-        # Randomly select 5 tags
-        selected_tags = random.sample(tags, min(5, len(tags)))
+        # Randomly select 3 tags as per backup implementation
+        selected_tags = random.sample(tags, min(3, len(tags)))
+    elif mode == "random3":
+        # Ensure exactly 3 random tags for configs
+        selected_tags = random.sample(tags, min(3, len(tags)))
     else:
-        # Use all tags
+        # Use all tags for Twitter
         selected_tags = tags
         
     return "\n" + "\n".join(selected_tags)

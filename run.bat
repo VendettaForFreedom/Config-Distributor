@@ -71,15 +71,25 @@ if not exist .env (
     exit /b 1
 )
 
-:: Create tags directory if it doesn't exist
+:: Create required directories if they don't exist
 if not exist teletweet (
     mkdir teletweet
 )
 
-:: Create tags file if it doesn't exist
+if not exist logs (
+    mkdir logs
+    echo Creating logs directory...
+)
+
+:: Create required files if they don't exist
 if not exist teletweet\tags.txt (
     echo Creating tags.txt file...
     type nul > teletweet\tags.txt
+)
+
+if not exist teletweet\message_id_pairs.txt (
+    echo Creating message_id_pairs.txt file...
+    type nul > teletweet\message_id_pairs.txt
 )
 
 :: Run the bot

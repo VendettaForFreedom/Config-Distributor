@@ -1,73 +1,101 @@
 """
-Utility modules for the TeleTweet bot.
-
-This package contains utility modules that provide core functionality:
-
-auth.py:
-- User authentication and permission checking
-- Authorization decorators
-
-message_utils.py:
-- Message content processing
-- Length checking and truncation
-- Text splitting utilities
-
-message_store.py:
-- Thread-safe message storage
-- Temporary data management
-- Message cleanup
-
-publishing.py:
-- Platform-specific message publishing
-- Media handling
-- Cross-platform posting
-
-tags.py:
-- Tag management and generation
-- Tag file handling
-- Random tag selection
+TeleTweet utility functions
 """
 
-from .auth import user_check, get_auth_data, delete_tweet, is_admin
-from .message_utils import (
-    get_source_info,
-    check_message_length,
-    truncate_content,
-    split_message
+# Authentication and user management
+from .auth import user_check, get_auth_data
+
+# Message formatting and handling
+from .message_format import (
+    format_repository_message,
+    format_content_with_ad,
+    get_channel_ad_message,
+    handle_source_message,
+    format_config_message,
+    format_config_channel_message,
+    truncate_content
 )
-from .message_store import MESSAGE_STORE
+
+# Publishing functionality
 from .publishing import (
+    handle_publish,
     publish_to_channel,
     publish_to_group,
     publish_to_twitter,
-    handle_publish
+    get_enabled_platforms
 )
+
+# Platform specific options
+from .platform_options import ask_platform_options
+
+# Preview functionality
+from .preview import show_preview, generate_preview
+
+# Repository management
+from .repository import get_random_message_pair
+
+# Tag management
 from .tags import generate_tags, add_tag, remove_tag
 
+# Task management
+from .delayed_tasks import forward_ad_message
+
+# Message storage
+from .message_store import MESSAGE_STORE
+
+# Message utilities
+from .message_utils import (
+    check_message_length,
+    split_message,
+    combine_messages,
+    calculate_total_length
+)
+
 __all__ = [
-    # Auth utilities
+    # Auth
     'user_check',
     'get_auth_data',
-    'delete_tweet',
-    'is_admin',
-    
-    # Message utilities
-    'get_source_info',
-    'check_message_length',
+
+    # Message format
+    'format_repository_message',
+    'format_content_with_ad',
+    'get_channel_ad_message',
+    'handle_source_message',
+    'format_config_message',
+    'format_config_channel_message',
     'truncate_content',
-    'split_message',
-    
-    # Message store
-    'MESSAGE_STORE',
-    
-    # Publishing utilities
+
+    # Publishing
+    'handle_publish',
     'publish_to_channel',
     'publish_to_group',
     'publish_to_twitter',
-    'handle_publish',
-    
-    # Tag utilities
+    'get_enabled_platforms',
+
+    # Platform options
+    'ask_platform_options',
+
+    # Preview
+    'show_preview',
+    'generate_preview',
+
+    # Repository
+    'get_random_message_pair',
+
+    # Tags
     'generate_tags',
     'add_tag',
-    'remove_tag'
+    'remove_tag',
+
+    # Tasks
+    'forward_ad_message',
+
+    # Storage
+    'MESSAGE_STORE',
+
+    # Utils
+    'check_message_length',
+    'split_message',
+    'combine_messages',
+    'calculate_total_length'
 ]

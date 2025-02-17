@@ -1,6 +1,7 @@
 from typing import Optional
 from pyrogram import types
-from .publishing import get_enabled_platforms, generate_preview
+from .publishing import get_enabled_platforms
+from .preview import show_preview
 
 async def ask_platform_options(message: types.Message, is_forwarded=False, is_multiple=False):
     """Ask user where to publish the message."""
@@ -47,10 +48,7 @@ async def ask_platform_options(message: types.Message, is_forwarded=False, is_mu
             )
         ]
         buttons.append(twitter_button)
-        
-    markup = types.InlineKeyboardMarkup(buttons) if buttons else None
-    
-    # Customize message based on available platforms
+
     # Add preview button if any platforms are enabled
     if enabled_platforms:
         preview_button = [
@@ -61,6 +59,9 @@ async def ask_platform_options(message: types.Message, is_forwarded=False, is_mu
         ]
         buttons.append(preview_button)
     
+    markup = types.InlineKeyboardMarkup(buttons) if buttons else None
+    
+    # Customize message based on available platforms
     if not enabled_platforms:
         msg_text = "No platforms are configured. Please configure Twitter credentials or Telegram channels/groups."
     elif "twitter" not in enabled_platforms and not buttons:
@@ -71,31 +72,5 @@ async def ask_platform_options(message: types.Message, is_forwarded=False, is_mu
     await message.reply_text(
         msg_text,
         reply_markup=markup,
-        quote=True
-    )
-
-async def show_preview(message: types.Message, attached_message: Optional[str] = None):
-    """Show preview of how message will look on each platform."""
-    previews = await generate_preview(message, attached_message)
-    
-    if not previews:
-        await message.reply_text(
-            "No platforms configured to generate preview.",
-            quote=True
-        )
-        return
-        
-    preview_text = "\n\n---\n\n".join(previews.values())
-    
-    buttons = [[
-        types.InlineKeyboardButton(
-            "🔄 Back to Options",
-            callback_data=f"back_options_{message.id}"
-        )
-    ]]
-    
-    await message.reply_text(
-        preview_text,
-        reply_markup=types.InlineKeyboardMarkup(buttons),
         quote=True
     )
