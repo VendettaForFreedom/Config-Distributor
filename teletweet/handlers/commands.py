@@ -1,10 +1,10 @@
-from pyrogram import Client, filters, types
-from ..utils.auth import get_auth_data, delete_tweet
-from ..utils.tweet import get_me
+from pyrogram import Client, filters, types, enums
+from ..utils.auth import get_auth_data
+from ..utils.tweet import get_me, delete_tweet
 
 # Help message
 HELP_TEXT = """
-*Available Commands*
+<b>Available Commands</b>
 /start - Start the bot
 /help - Show this help message
 /delete - Delete a tweet (reply to a tweet)
@@ -26,14 +26,14 @@ async def start_handler(client: Client, message: types.Message):
 async def help_handler(client: Client, message: types.Message):
     """Handle /help command"""
     message.reply_chat_action("typing")
-    help_text = """*Available Commands*:
+    help_text = """<b>Available Commands</b>:
     
 /start - Start the bot
 /help - Show this help message
 /delete - Delete a tweet (reply to a tweet)
 /status - Check Twitter connection status
 
-*You can*:
+<b>You can</b>:
 1. Forward a message from any channel
 2. Send configs directly to publish them
 
@@ -41,7 +41,7 @@ For configs, you can:
 - Send a single config
 - Send multiple configs in separate lines
 """
-    await message.reply_text(help_text)
+    await message.reply_text(help_text, parse_mode=enums.ParseMode.HTML)
 
 async def status_handler(client: Client, message: types.Message):
     """Handle /status command to check Twitter connection"""
@@ -50,18 +50,18 @@ async def status_handler(client: Client, message: types.Message):
         result = await get_me(message.chat.id)
         if isinstance(result, dict) and "error" in result:
             await message.reply_text(
-                f"❌ Twitter connection failed:\n`{result['error']}`",
-                parse_mode="markdown"
+                f"❌ Twitter connection failed:\n<code>{result['error']}</code>",
+                parse_mode=enums.ParseMode.HTML
             )
         else:
             await message.reply_text(
                 f"✅ Successfully connected to Twitter!\nAccount: {result}",
-                parse_mode="markdown"
+                parse_mode=enums.ParseMode.HTML
             )
     except Exception as e:
         await message.reply_text(
-            f"❌ Error checking Twitter status:\n`{str(e)}`",
-            parse_mode="markdown"
+            f"❌ Error checking Twitter status:\n<code>{str(e)}</code>",
+                parse_mode=enums.ParseMode.HTML
         )
 
 async def delete_handler(client: Client, message: types.Message):
@@ -73,7 +73,7 @@ async def delete_handler(client: Client, message: types.Message):
     result = await delete_tweet(message)
     if result.get("error"):
         resp = f"❌ Error: `{result['error']}`"
-        await message.reply_text(resp, quote=True, parse_mode="markdown")
+        await message.reply_text(resp, quote=True, parse_mode=enums.ParseMode.HTML)
     else:
         resp = f"🗑 Your tweet has been deleted.\n"
-        await message.reply_to_message.edit_text(resp, parse_mode="markdown")
+        await message.reply_to_message.edit_text(resp, parse_mode=enums.ParseMode.HTML)

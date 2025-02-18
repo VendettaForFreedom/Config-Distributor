@@ -1,6 +1,7 @@
 import logging
 import tweepy
 from typing import Optional, List, Dict, Union
+import traceback
 from ..config import (
     CONSUMER_KEY,
     CONSUMER_SECRET,
@@ -8,8 +9,9 @@ from ..config import (
     ACCESS_SECRET
 )
 
-def get_me(user_id) -> Union[str, Dict[str, str]]:
+async def get_me(user_id) -> Union[str, Dict[str, str]]:
     """Get Twitter username or error details."""
+    logging.info("Checking Twitter credentials...")
     try:
         client = tweepy.Client(
             consumer_key=CONSUMER_KEY,
@@ -18,13 +20,23 @@ def get_me(user_id) -> Union[str, Dict[str, str]]:
             access_token_secret=ACCESS_SECRET
         )
         me = client.get_me()
-        return me.data.username
+        if not me or not me.data:
+            return {"error": "Failed to get Twitter account info"}
+        username = me.data.get("username")
+        name = me.data.get("name", username)
+        logging.info(f"Successfully connected as @{username}")
+        return f"[{name}](https://twitter.com/{username})"
     except Exception as e:
-        return {"error": str(e)}
+        error_msg = f"Twitter authentication failed: {str(e)}"
+        logging.error(f"{error_msg}\n{traceback.format_exc()}")
+        return {"error": error_msg}
 
 async def send_tweet(message, text: str, pics: Optional[List[bytes]] = None) -> Dict:
     """Send a tweet with optional media."""
     try:
+        if not all([CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET]):
+            return {"error": "Twitter credentials are not properly configured"}
+
         client = tweepy.Client(
             consumer_key=CONSUMER_KEY,
             consumer_secret=CONSUMER_SECRET,
@@ -42,14 +54,40 @@ async def send_tweet(message, text: str, pics: Optional[List[bytes]] = None) -> 
             )
             api = tweepy.API(auth)
             
-            for pic in pics:
-                media = api.media_upload(filename="media", file=pic)
-                media_ids.append(media.media_id)
+            try:
+                for pic in pics:
+                    media = api.media_upload(filename="media", file=pic)
+                    media_ids.append(media.media_id)
+            except Exception as e:
+                error_msg = f"Failed to upload media: {str(e)}"
+                logging.error(f"{error_msg}\n{traceback.format_exc()}")
+                return {"error": error_msg}
         
-        result = client.create_tweet(text=text, media_ids=media_ids if media_ids else None)
-        return {"id": result.data["id"]}
+        try:
+            result = client.create_tweet(text=text, media_ids=media_ids if media_ids else None)
+            logging.info(f"Tweet posted successfully: {result.data['id']}")
+            return {"id": result.data["id"]}
+        except Exception as e:
+            if "Tweet text length exceeds limit" in str(e):
+                try:
+                    result = client.create_tweet(
+                        text=text[:270] + "...",
+                        media_ids=media_ids if media_ids else None
+                    )
+                    logging.info(f"Tweet posted with truncation: {result.data['id']}")
+                    return {"id": result.data["id"]}
+                except Exception as e2:
+                    error_msg = f"Failed to post truncated tweet: {str(e2)}"
+                    logging.error(f"{error_msg}\n{traceback.format_exc()}")
+                    return {"error": error_msg}
+            error_msg = f"Failed to post tweet: {str(e)}"
+            logging.error(f"{error_msg}\n{traceback.format_exc()}")
+            return {"error": error_msg}
+
     except Exception as e:
-        return {"error": str(e)}
+        error_msg = f"Twitter API error: {str(e)}"
+        logging.error(f"{error_msg}\n{traceback.format_exc()}")
+        return {"error": error_msg}
 
 async def delete_tweet(message) -> Dict:
     """Delete a tweet."""
@@ -76,12 +114,17 @@ async def delete_tweet(message) -> Dict:
             access_token=ACCESS_KEY,
             access_token_secret=ACCESS_SECRET
         )
-        client.delete_tweet(tweet_id)
-        return {"success": True}
+        result = client.delete_tweet(tweet_id)
+        if result.data.get("deleted"):
+            logging.info(f"Tweet {tweet_id} deleted successfully")
+            return {"success": True}
+        return {"error": "Failed to delete tweet"}
     except Exception as e:
-        return {"error": str(e)}
+        error_msg = f"Error deleting tweet: {str(e)}"
+        logging.error(f"{error_msg}\n{traceback.format_exc()}")
+        return {"error": error_msg}
 
-def is_video_tweet(user_id, text: str) -> str:
+def is_video_tweet(user_id, text: str) -> Optional[str]:
     """Check if text contains a tweet with video."""
     if not text or not text.startswith("https://twitter.com"):
         return None
@@ -93,7 +136,7 @@ def is_video_tweet(user_id, text: str) -> str:
         
     return match.group(1)
 
-async def get_video_download_link(chat_id, tweet_id: str) -> str:
+async def get_video_download_link(chat_id, tweet_id: str) -> Optional[str]:
     """Get video download link for a tweet."""
     try:
         auth = tweepy.OAuth1UserHandler(
@@ -110,9 +153,12 @@ async def get_video_download_link(chat_id, tweet_id: str) -> str:
                 if m.get("type") == "video":
                     variants = m.get("video_info", {}).get("variants", [])
                     mp4s = [v for v in variants if v.get("content_type") == "video/mp4"]
-                    # Sort by bitrate, highest first
-                    best_video = sorted(mp4s, key=lambda x: x.get("bitrate", 0), reverse=True)[0]
-                    return best_video["url"]
+                    if mp4s:
+                        # Sort by bitrate, highest first
+                        best_video = sorted(mp4s, key=lambda x: x.get("bitrate", 0), reverse=True)[0]
+                        logging.info(f"Found video URL for tweet {tweet_id}")
+                        return best_video["url"]
     except Exception as e:
-        logging.error(f"Error getting video link: {e}")
+        error_msg = f"Error getting video link: {str(e)}"
+        logging.error(f"{error_msg}\n{traceback.format_exc()}")
     return None

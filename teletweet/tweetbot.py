@@ -13,7 +13,7 @@ from pathlib import Path
 current_dir = Path(__file__).parent.parent
 sys.path.append(str(current_dir))
 
-from pyrogram import Client, filters
+from pyrogram import Client, filters, enums
 from teletweet.config import APP_HASH, APP_ID, BOT_TOKEN
 from teletweet.utils.auth import user_check
 from teletweet.handlers.commands import (
@@ -153,10 +153,45 @@ class TeleTweetBot:
                 await call.answer()
                 
             except Exception as e:
-                logging.error(f"Error handling callback: {e}")
+                error_msg = f"Error handling callback: {str(e)}"
+                logging.error(error_msg)
                 if message_id:
                     MESSAGE_STORE.pop(int(message_id), None)
-                await call.answer("An error occurred processing your request.")
+                try:
+                    # Show detailed error in chat
+                    await call.message.edit_text(
+                        f"❌ {error_msg}\n\nPlease try again or contact support if the issue persists.",
+                        parse_mode=enums.ParseMode.HTML
+                    )
+                    # Show brief popup
+                    await call.answer(
+                        "Error occurred. Check message for details.",
+                        show_alert=True
+                    )
+                except Exception as e2:
+                    logging.error(f"Error showing error message: {e2}")
+                    await call.answer(
+                        f"Error: {str(e)}",
+                        show_alert=True
+                    )
+
+    async def error_handler(self, client, update, error):
+        """Handle errors globally."""
+        try:
+            if hasattr(update, "message"):
+                chat_id = update.message.chat.id
+                await client.send_message(
+                    chat_id=chat_id,
+                    text=f"❌ An error occurred:\n`{str(error)}`",
+                    parse_mode=enums.ParseMode.HTML
+                )
+            elif hasattr(update, "callback_query"):
+                await update.callback_query.answer(
+                    f"Error: {str(error)}",
+                    show_alert=True
+                )
+        except Exception as e:
+            logging.error(f"Error in error handler: {e}")
 
     def run(self):
         """Start the bot."""
@@ -174,9 +209,20 @@ class TeleTweetBot:
         
         # Start bot
         try:
+            self.bot.set_parse_mode(enums.ParseMode.HTML)
             self.bot.run()
         except Exception as e:
-            logging.error(f"Bot crashed: {e}")
+            error_msg = f"Bot crashed: {e}"
+            logging.error(error_msg)
+            # Try to notify admin if possible
+            try:
+                self.bot.send_message(
+                    chat_id=self.bot.get_me().id,
+                    text=f"❌ {error_msg}",
+                    parse_mode=enums.ParseMode.HTML
+                )
+            except:
+                pass
             sys.exit(1)
 
 if __name__ == "__main__":
