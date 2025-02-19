@@ -147,16 +147,61 @@ def config_handler(client, message: types.Message):
     bot.send_message(message.chat.id, "Send me a list of configs I send them with an ad.")
     STEP[message.chat.id] = "all_in_one"
 
+def show_source_preview(message: types.Message):
+    """Show preview for a single source channel message"""
+    text = message.text or message.caption or ""
+    photo = message.photo
+    
+    preview = "📝 Preview of forwarded message:\n\n"
+    if text:
+        preview += f"Text: {truncate_content(text, 300)}\n\n"
+    if photo:
+        preview += "📸 Contains photo\n\n"
+        
+    confirm_btn = types.InlineKeyboardButton("✅ Forward Message", callback_data="forward_single")
+    cancel_btn = types.InlineKeyboardButton("❌ Cancel", callback_data="cancel_forward")
+    preview_markup = types.InlineKeyboardMarkup([[confirm_btn, cancel_btn]])
+    
+    # Store message for later forwarding
+    STEP[message.chat.id] = {
+        "original_message": message,
+        "type": "single"
+    }
+    
+    message.reply_text(preview, reply_markup=preview_markup)
+
+def show_multi_message_preview(content: str, picture: str, chat_id: str, message: types.Message):
+    """Show preview for multi-message forward"""
+    preview = "📝 Preview of combined messages:\n\n"
+    if content:
+        preview += f"Text: {truncate_content(content, 300)}\n\n"
+    if picture:
+        preview += "📸 Contains photo\n\n"
+        
+    confirm_btn = types.InlineKeyboardButton("✅ Forward Messages", callback_data="forward_multi")
+    cancel_btn = types.InlineKeyboardButton("❌ Cancel", callback_data="cancel_forward")
+    preview_markup = types.InlineKeyboardMarkup([[confirm_btn, cancel_btn]])
+    
+    # Store messages for later forwarding
+    STEP[message.chat.id] = {
+        "content": content,
+        "picture": picture,
+        "chat_id": chat_id,
+        "type": "multi"
+    }
+    
+    message.reply_text(preview, reply_markup=preview_markup)
+
 @bot.on_message(filters.incoming)
 @user_check
 def tweet_text_handler(client, message: types.Message):
     if str(message.chat.id) == SOURCE_CHANNEL_ID:
-        auto_ad_message(message)
+        auto_ad_message(message, preview_only=True)
         return
     if(message.text is None and message.caption is None):
         return
     
-    message.reply_chat_action(enums.ChatAction.TYPING)  
+    message.reply_chat_action(enums.ChatAction.TYPING)
     # first check if the user want to download video, gif
     tweet_id = is_video_tweet(message.chat.id, message.text)
     if tweet_id and message.text.startswith("https://twitter.com"):
@@ -169,6 +214,27 @@ def tweet_text_handler(client, message: types.Message):
         )
         message.reply_text("Do you want to download video or just tweet this?", quote=True, reply_markup=markup)
         return
+    
+    # Show preview for messages
+    text = message.text or message.caption
+    preview = f"Preview of your message:\n\n{text}"
+    if len(preview) > 500:
+        preview = preview[:497] + "..."
+    
+    # Add inline keyboard for confirm/edit
+    confirm_btn = types.InlineKeyboardButton("✅ Confirm & Send", callback_data="confirm")
+    edit_btn = types.InlineKeyboardButton("✏️ Edit", callback_data="edit")
+    preview_markup = types.InlineKeyboardMarkup([[confirm_btn, edit_btn]])
+    
+    # Store original message for later use
+    STEP[message.chat.id] = {
+        "original_message": message,
+        "text": text,
+        "send_ad": True,
+        "divide": True
+    }
+    
+    message.reply_text(preview, quote=True, reply_markup=preview_markup)
     
     if STEP.get(message.chat.id) == "single_config":
         handle_message(message, False, False)
@@ -194,11 +260,13 @@ def is_multi_message(message):
         time_difference = -time_difference
     return time_difference < timedelta(minutes=5)
 
-def auto_ad_message(message:types.Message):
+def auto_ad_message(message:types.Message, preview_only=False):
     if str(message.chat.id) == SOURCE_CHANNEL_ID:
         logging.info("Message received from %s", message.chat.id)
         if not Multi_message or not is_multi_message(message):
             Multi_message[SOURCE_CHANNEL_ID] = message
+            if preview_only:
+                show_source_preview(message)
             return
         
         content = ""
@@ -213,10 +281,16 @@ def auto_ad_message(message:types.Message):
             picture = Multi_message[SOURCE_CHANNEL_ID].photo.file_id
             chat_id = message.forward_from_message_id
         else:
+            if preview_only:
+                show_source_preview(message)
             return
         
         if chat_id is None:
             chat_id = ""
+            
+        if preview_only:
+            show_multi_message_preview(content, picture, chat_id, message)
+            return
 
         messageNew = None  
         img_data = None 
@@ -377,17 +451,35 @@ def send_config_message(part):
         logging.error(f"Error while sending message to {CONFIG_CHANNEL_ID}: {e}")
 
 def handle_message(message, send_ad=True, divide=True):
+    """Handle incoming messages with optional ad and message splitting."""
+    if not hasattr(message, 'text') and not hasattr(message, 'caption'):
+        return
+        
     text = message.text or message.caption
-    parts = text.split("\n")
+    if not text:
+        return
+        
+    # First handle advertisement if needed
     if send_ad:
         send_ad_message(message)
-    if divide:
-        for part in parts:
-            if len(part) > 10:
-                send_config_message(part)
-                time.sleep(1)
-    else:
-        send_config_message(text)
+        
+    # Then handle the actual message
+    try:
+        if divide:
+            parts = text.split("\n")
+            for part in parts:
+                if len(part) > 10:
+                    send_config_message(part)
+                    time.sleep(1)
+        else:
+            send_config_message(text)
+    except Exception as e:
+        logging.error(f"Error in handle_message: {str(e)}")
+        # If message handling fails, notify the user
+        error_msg = f"Error sending message: {str(e)}"
+        if len(error_msg) > 200:  # Truncate long error messages
+            error_msg = error_msg[:197] + "..."
+        message.reply_text(error_msg, quote=True)
 
 @bot.on_message(filters.media_group)
 @user_check
@@ -443,8 +535,121 @@ def tweet_callback(client, call: types.CallbackQuery):
     notify_result(result, call.message)
 
 
+@bot.on_callback_query(filters.regex("confirm"))
+def confirm_callback(client, call: types.CallbackQuery):
+    chat_id = call.message.chat.id
+    if chat_id not in STEP:
+        bot.answer_callback_query(call.id, "Session expired. Please send your message again.")
+        return
+    
+    stored_data = STEP[chat_id]
+    original_message = stored_data["original_message"]
+    send_ad = stored_data.get("send_ad", True)
+    divide = stored_data.get("divide", True)
+    
+    # Process message as originally intended
+    handle_message(original_message, send_ad, divide)
+    
+    # Clean up stored data
+    STEP.pop(chat_id)
+    
+    # Update preview message
+    call.message.edit_text(
+        call.message.text + "\n\n✅ Message sent!",
+        reply_markup=None
+    )
+    bot.answer_callback_query(call.id, "Message sent successfully!")
+
+@bot.on_callback_query(filters.regex("edit"))
+def edit_callback(client, call: types.CallbackQuery):
+    chat_id = call.message.chat.id
+    if chat_id not in STEP:
+        bot.answer_callback_query(call.id, "Session expired. Please send your message again.")
+        return
+    
+    # Tell user to send the edited message
+    call.message.edit_text(
+        "Please send your edited message now.",
+        reply_markup=None
+    )
+    bot.answer_callback_query(call.id, "Send your edited message")
+
+@bot.on_callback_query(filters.regex("^forward_"))
+def forward_callback(client, call: types.CallbackQuery):
+    chat_id = call.message.chat.id
+    if chat_id not in STEP:
+        bot.answer_callback_query(call.id, "Session expired. Please try again.")
+        return
+
+    stored_data = STEP[chat_id]
+    forward_type = stored_data.get("type")
+    
+    try:
+        if forward_type == "single":
+            # Forward single message
+            message = stored_data["original_message"]
+            auto_ad_message(message, preview_only=False)
+            success_text = "✅ Message forwarded successfully!"
+        elif forward_type == "multi":
+            # Forward multi-message combination
+            content = stored_data["content"]
+            picture = stored_data["picture"]
+            chat_id = stored_data["chat_id"]
+            
+            # Create temp message with combined data
+            temp_message = types.Message(
+                message_id=0,
+                date=0,
+                chat=types.Chat(id=SOURCE_CHANNEL_ID, type="channel"),
+            )
+            if picture:
+                temp_message.photo = types.Photo(file_id=picture)
+            if content:
+                temp_message.text = content
+            
+            auto_ad_message(temp_message, preview_only=False)
+            success_text = "✅ Combined messages forwarded successfully!"
+            
+        # Update preview message
+        call.message.edit_text(
+            call.message.text + "\n\n" + success_text,
+            reply_markup=None
+        )
+        bot.answer_callback_query(call.id, "Messages forwarded!")
+        
+    except Exception as e:
+        error_msg = f"Error forwarding message: {str(e)}"
+        if len(error_msg) > 200:
+            error_msg = error_msg[:197] + "..."
+        call.message.edit_text(
+            call.message.text + f"\n\n❌ {error_msg}",
+            reply_markup=None
+        )
+        bot.answer_callback_query(call.id, "Failed to forward messages")
+    
+    finally:
+        # Clean up stored data
+        STEP.pop(chat_id, None)
+
+@bot.on_callback_query(filters.regex("cancel_forward"))
+def cancel_forward_callback(client, call: types.CallbackQuery):
+    chat_id = call.message.chat.id
+    # Clean up stored data
+    if chat_id in STEP:
+        STEP.pop(chat_id)
+    # Update message
+    call.message.edit_text(
+        call.message.text + "\n\n❌ Forwarding cancelled.",
+        reply_markup=None
+    )
+    bot.answer_callback_query(call.id, "Forwarding cancelled")
+
 @bot.on_callback_query()
 def video_callback(client, call: types.CallbackQuery):
+    # Skip if this is a known callback
+    if call.data in ["confirm", "edit", "tweet", "forward_single", "forward_multi", "cancel_forward"]:
+        return
+        
     chat_id = call.message.chat.id
     message = call.message
     message.reply_chat_action(enums.ChatAction.TYPING)
