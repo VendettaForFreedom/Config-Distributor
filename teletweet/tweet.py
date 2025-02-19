@@ -148,8 +148,17 @@ def get_video_download_link(chat_id, tweet_id):
 
 def is_video_tweet(chat_id, text) -> str:
     # will return an id
+    if not text:
+        logging.info("No text provided for video tweet check")
+        return None
+        
     tweet_id = __get_tweet_id_from_url(text)
     logging.info("tweet id is %s", tweet_id)
+    
+    if not tweet_id:
+        logging.info("No tweet ID found in text")
+        return None
+        
     client, api = __connect_twitter(chat_id)
     logging.info("Getting video tweets......")
     try:

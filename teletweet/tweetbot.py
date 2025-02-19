@@ -43,7 +43,6 @@ from config import (
     tweet_length
 )
 
-from helper import get_auth_data, sign_in, sign_off
 from tweet import (
     delete_tweet,
     get_me,
@@ -62,12 +61,29 @@ bot = Client("teletweet", APP_ID, APP_HASH, bot_token=BOT_TOKEN)
 STEP = {}
 Multi_message = {}
 
+def user_check(func):
+    def wrapper(client, message):
+        user_id = message.chat.id
+        logging.info("User %s is using the bot", user_id)
+        
+        if str(user_id) not in [CONFIG_CHANNEL_ID, CHANNEL_ID, GROUP_ID]:
+            logging.info("User %s got into the first if", user_id)
+            if str(user_id) in ALLOW_USERS or str(user_id) == SOURCE_CHANNEL_ID:
+                logging.info("User %s got into the second if", user_id)
+                logging.info("User %s is authenticated!")
+                return func(client, message)
+            else:
+                logging.info("User %s got into the else", user_id)
+                logging.info("User %s is not authenticated!")
+                bot.send_message(message.chat.id, "You're not allowed to use this bot.")
+                return
+    return wrapper
+
 @bot.on_message(filters.command(["start"]))
+@user_check
 def start_handler(client, message: types.Message):
     message.reply_chat_action(enums.ChatAction.TYPING)
-    if get_auth_data(message.chat.id):
-        bot.send_message(message.chat.id, "Start by sending me a message?")
-        return
+    bot.send_message(message.chat.id, "Start by sending me a message?")
     msg = "Welcome to Config-Distributor. " "This bot will connect you from Telegram Bot to Twitter "
     if ALLOW_USERS != [""]:
         msg += "\n\nTHIS BOT IS ONLY AVAILABLE TO CERTAIN USERS. Contact creator for help."
@@ -93,25 +109,6 @@ def delete_handler(client, message: types.Message):
     else:
         resp = f"🗑 Your tweet has been deleted.\n"
         message.reply_to_message.edit_text(resp, parse_mode=enums.ParseMode.MARKDOWN)
-
-
-def user_check(func):
-    def wrapper(client, message):
-        user_id = message.chat.id
-        logging.info("User %s is using the bot", user_id)
-        
-        if str(user_id) not in [CONFIG_CHANNEL_ID, CHANNEL_ID, GROUP_ID]:
-            logging.info("User %s got into the first if", user_id)
-            if str(user_id) in ALLOW_USERS or str(user_id) == SOURCE_CHANNEL_ID:
-                logging.info("User %s got into the second if", user_id)
-                logging.info("User %s is authenticated!")
-                return func(client, message)
-            else:
-                logging.info("User %s got into the else", user_id)
-                logging.info("User %s is not authenticated!")
-                bot.send_message(message.chat.id, "You're not allowed to use this bot.")
-                return
-    return wrapper
 
 @bot.on_message(filters.command(["ping"]))
 @user_check
@@ -198,13 +195,14 @@ def tweet_text_handler(client, message: types.Message):
     if str(message.chat.id) == SOURCE_CHANNEL_ID:
         auto_ad_message(message, preview_only=True)
         return
-    if(message.text is None and message.caption is None):
+    message_text = message.text or message.caption
+    if not message_text:
         return
     
     message.reply_chat_action(enums.ChatAction.TYPING)
     # first check if the user want to download video, gif
-    tweet_id = is_video_tweet(message.chat.id, message.text)
-    if tweet_id and message.text.startswith("https://twitter.com"):
+    tweet_id = is_video_tweet(message.chat.id, message_text)
+    if tweet_id and message_text.startswith("https://twitter.com"):
         btn1 = types.InlineKeyboardButton("Download", callback_data=tweet_id)
         btn2 = types.InlineKeyboardButton("Tweet", callback_data="tweet")
         markup = types.InlineKeyboardMarkup(

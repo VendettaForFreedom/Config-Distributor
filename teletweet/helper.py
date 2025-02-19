@@ -6,58 +6,49 @@
 
 import json
 import logging
-from base64 import b64decode
-# from config import AUTH_STRING
+import os
+import random
 
-# import os
-# script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
-# rel_path = "auth.json"
-# abs_file_path = os.path.join(script_dir, rel_path)
+script_dir = os.path.dirname(__file__)
 
+def ensure_file_exists(filename, default_content):
+    """Ensure a file exists with default content if needed."""
+    filepath = os.path.join(script_dir, filename)
+    try:
+        if not os.path.exists(filepath):
+            with open(filepath, "w", encoding="utf-8") as f:
+                if isinstance(default_content, dict):
+                    json.dump(default_content, f)
+                else:
+                    f.write(default_content)
+        return filepath
+    except Exception as e:
+        logging.error(f"Error ensuring file exists {filename}: {e}")
+        return None
 
-def get_auth_data(chat_id: int) -> dict:
-    chat_id = str(chat_id)
-    # data = json.load(open(abs_file_path, "r"))
-    data = json.load(open("auth.json", "r"))
-    return data.get(str(chat_id), {})
+def generate_tags(mode: str = "allrandom") -> str:
+    """Generate tags for messages."""
+    try:
+        tags_file = ensure_file_exists("tags.txt", "")
+        if not tags_file:
+            return ""
 
+        with open(tags_file, "r", encoding="utf-8") as f:
+            strings = f.read().splitlines()
+            if not strings:
+                return ""
 
-def sign_in(chat_id: int, auth_string):
-    # if auth_string == AUTH_STRING:
-    logging.info("Adding user oauth token...")
-        # auth_dict = "1234567890"
-        # data = json.load(open(abs_file_path, "r"))
-    auth_dict = b64decode(auth_string.encode("u8")).decode("u8")
-    data = json.load(open("auth.json", "r"))
-    data[str(chat_id)] = json.loads(auth_dict)
-        # json.dump(data, open(abs_file_path, "w"))
-        # return True
-    # return False
-    json.dump(data, open("auth.json", "w"))
-    return "Login success"
+            STRINGS = strings[:5]
+            random.shuffle(STRINGS)
+            
+            if mode == "allrandom":
+                STRINGS = STRINGS[:1]
+                random.shuffle(strings)
+                STRINGS.extend(strings[:2])
+            else:
+                STRINGS = STRINGS[:3]
 
-
-def sign_off(chat_id: str):
-    logging.info("Deleting user oauth token...")
-    # data = json.load(open(abs_file_path, "r"))
-    data = json.load(open("auth.json", "r"))
-    data.pop(str(chat_id), None)
-    # json.dump(data, open(abs_file_path, "w"))
-    json.dump(data, open("auth.json", "w"))
-
-def generate_tags(mode: str = "allrandom"):
-    with open("tags.txt", "r") as f:
-        strings = f.read().splitlines() 
-        import random
-
-        STRINGS = strings[:5]
-        random.shuffle(STRINGS)
-        if(mode == "allrandom"):
-            STRINGS = STRINGS[:1]
-            random.shuffle(strings)
-            STRINGS.extend(strings[:2])
-        else:
-            STRINGS = STRINGS[:3]
-
-        f.close()
-        return "\n".join(STRINGS)
+            return "\n".join(STRINGS)
+    except Exception as e:
+        logging.error(f"Error generating tags: {e}")
+        return ""
