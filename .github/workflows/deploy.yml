@@ -117,6 +117,7 @@ jobs:
           echo SOURCE_CHANNEL_ID=${{ secrets.SOURCE_CHANNEL_ID}} >> teletweet.env
           echo SOURCE_REPOSITORY_CHANNEL_ID=${{ secrets.SOURCE_REPOSITORY_CHANNEL_ID}} >> teletweet.env
           echo GROUP_ID=${{ secrets.GROUP_ID}} >> teletweet.env
+          echo tweet_length=${{ secrets.tweet_length}} >> teletweet.env
           echo GROUP_TOPIC_ID=${{ secrets.GROUP_TOPIC_ID}} >> teletweet.env
           echo CHANNEL_AD_MESSAGE_ID=${{ secrets.CHANNEL_AD_MESSAGE_ID}} >> teletweet.env
           echo GROUP=${{ secrets.GROUP}} >> teletweet.env

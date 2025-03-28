@@ -38,6 +38,7 @@ CONFIG_CHANNEL = "\nhttps://t.me/FreeVPNHomesConfigs/"
 SOURCE_CHANNEL = "\nhttps://t.me/javeednaman/"
 CONTINUE_READING = "ادامه مطلب رو در کانال زیر بخوانید:\n"
 
+tweet_length = int(os.getenv("tweet_length", "300"))
 tweet_format = "https://twitter.com/{screen_name}/status/{id}"
 # remove ALLOW_USERS white spaces then split by comma
 ALLOW_USERS = os.getenv("ALLOW_USERS", "").replace(" ", "").split(",") if os.getenv("ALLOW_USERS", "") else [""]
