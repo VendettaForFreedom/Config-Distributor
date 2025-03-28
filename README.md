@@ -38,10 +38,6 @@ The bot recognizes commands for user interaction, allowing management of Twitter
 
 `/start`: Greets the user and provides initial instructions or the authentication link for Twitter.
 
-`/sign_in`: Initiates Twitter authentication, guiding the user through obtaining and submitting an authentication code.
-
-`/sign_off`: Logs the user out, disconnecting their Twitter account from the bot.
-
 Direct Messaging: Users can send tweets (text or media) directly by messaging the bot.
 
 ## Usage
